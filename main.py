@@ -77,5 +77,3 @@ def UserForGenre( genero : str ):
     for x in user.index.tolist():
         texto = texto+'Año '+str(int(user.loc[x]['date']))+': '+str(int(user.loc[x]['playtime']))+' Hora(s). '
     return texto
-
-print(user_items.info())
