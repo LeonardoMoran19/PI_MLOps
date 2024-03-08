@@ -78,3 +78,4 @@ def UserForGenre( genero : str ):
         texto = texto+'Año '+str(int(user.loc[x]['date']))+': '+str(int(user.loc[x]['playtime']))+' Hora(s). '
     return texto
 
+print(user_items.info())
