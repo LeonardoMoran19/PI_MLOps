@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import pandas as pd
 pd.options.mode.chained_assignment = None
 
+
 app = FastAPI()
 
 steam_games = pd.read_parquet('steam_games.parquet')
@@ -77,3 +78,4 @@ def UserForGenre( genero : str ):
     for x in user.index.tolist():
         texto = texto+'Año '+str(int(user.loc[x]['date']))+': '+str(int(user.loc[x]['playtime']))+' Hora(s). '
     return texto
+
