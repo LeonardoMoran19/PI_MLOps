@@ -62,26 +62,23 @@ def PlayTimeGenre(genero: str):
     return f"Año de lanzamiento con más horas jugadas para el género {genero} es el: {most_played_year}"
 
 @app.get("/UserForGenre")
-def UserForGenre( genero : str ): 
-    steam_games = pd.read_parquet('steam_games.parquet')
-    user_items = pd.read_parquet('users_items.parquet')
+def UserForGenre(genero: str):
+    steam_games = pd.read_parquet('steam_games.parquet', columns=['genres', 'date'])
+    user_items = pd.read_parquet('users_items.parquet', columns=['user_id', 'item_id', 'playtime'])
     steam_games = steam_games[steam_games['genres'].apply(lambda x: genero in x)]
-    steam_games['date']=steam_games['date'].dt.year
-    indices= steam_games.index.tolist()
+    steam_games['date'] = pd.to_datetime(steam_games['date']).dt.year
+    indices = steam_games.index
     user_items = user_items[user_items['item_id'].isin(indices)]
-    user_top = user_items.drop(columns={'item_name','item_id'})
-    user_top = user_top.groupby('user_id')['playtime'].sum().reset_index().sort_values(by='playtime', ascending=False)
-    user_top = user_top['user_id'].iloc[0]
-    user = user_items[user_items['user_id']==user_top]
-    user = user.set_index('item_id')
-    game_date = steam_games.drop(columns={'name','genres'})
-    user = user.merge(game_date, how='left', left_index=True, right_index=True)
-    user = user.drop(columns={'item_name','user_id'})
-    user = user.groupby('date')['playtime'].sum().reset_index()
-    user = user[user['playtime']>0]
-    texto = 'Usuario con mas horas jugadas para el genero '+genero+': '+str(user_top)+'. Horas jugadas por año de lanzamiento: '
-    for x in user.index.tolist():
-        texto = texto+'Año '+str(int(user.loc[x]['date']))+': '+str(int(user.loc[x]['playtime']))+' Hora(s). '
+    user_top = user_items.groupby('user_id')['playtime'].sum().reset_index().sort_values(by='playtime', ascending=False)
+    user_top_id = user_top.iloc[0]['user_id']
+    user = user_items[user_items['user_id'] == user_top_id]
+    user = user.set_index('item_id').merge(steam_games.drop(columns=['genres']), how='left', left_index=True, right_index=True)
+    user = user.drop(columns=[ 'user_id']).groupby('date')['playtime'].sum().reset_index()
+    user = user[user['playtime'] > 0]
+    texto = f'Usuario con más horas jugadas para el género {genero}: {user_top_id}. Horas jugadas por año de lanzamiento: '
+    for index, row in user.iterrows():
+        texto += f'Año {int(row["date"])}: {int(row["playtime"])} hora(s). '
+
     return texto
 
 @app.get("/GameRecommendation")
@@ -95,4 +92,3 @@ def recomendacion_juego( id :int):
     similar_games = similar_games['name'].values
     
     return 'Juegos recomendados: 1.'+similar_games[0]+', 2.'+similar_games[1]+', 3.'+similar_games[2]+', 4.'+similar_games[3]+', 5.'+similar_games[4]
-
