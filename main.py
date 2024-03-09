@@ -10,7 +10,7 @@ user_reviews = pd.read_parquet('user_reviews.parquet')
 user_items = pd.read_parquet('users_items.parquet')
 
 @app.get("/UsersRecommend")
-def UsersRecommend( year : int ):
+async def UsersRecommend( year : int ):
     df = user_reviews[(user_reviews['date'].dt.year == year) & 
                       (user_reviews['sentiment_analysis'] > 0)].drop(columns=['date','sentiment_analysis'])
     df = df.groupby('item_id')['recommend'].sum().reset_index()
@@ -24,7 +24,7 @@ def UsersRecommend( year : int ):
     return 'Puesto 1: '+names[0]+', Puesto 2: '+names[1]+', Puesto 3: '+names[2]
 
 @app.get("/UsersNotRecommend")
-def UsersNotRecommend( year : int ):
+async def UsersNotRecommend( year : int ):
     df = user_reviews[(user_reviews['date'].dt.year == year) & 
                       (user_reviews['sentiment_analysis'] == 0)&
                       (user_reviews['recommend'] == 0) ].drop(columns=['recommend','date','sentiment_analysis'])
@@ -40,13 +40,13 @@ def UsersNotRecommend( year : int ):
     return 'Puesto 1: '+names[0]+', Puesto 2: '+names[1]+', Puesto 3: '+names[2]
 
 @app.get("/SentimentAnalysis")
-def sentiment_analysis( year : int ):
+async def sentiment_analysis( year : int ):
     df = user_reviews[(user_reviews['date'].dt.year == year)].drop(columns={'date','recommend','item_id'})
     df = df.value_counts().reset_index().set_index('sentiment_analysis')
     return 'Negativo = '+str(df.loc[0]['count'])+' Neutral = '+str(df.loc[1]['count'])+' Positivo = '+str(df.loc[2]['count'])
 
 @app.get('/PlayTimeGenre')
-def PlayTimeGenre( genero : str ):
+async def PlayTimeGenre( genero : str ):
     games_df = steam_games[steam_games['genres'].apply(lambda x: genero in x)]
     users_df = user_items[['item_id','playtime']]
     users_df = users_df.groupby('item_id')['playtime'].sum().reset_index().set_index('item_id')
@@ -59,7 +59,7 @@ def PlayTimeGenre( genero : str ):
     return 'Año de lanzamiento con mas horas jugadas para el genero '+genero+' es el: '+str(int(merged_df['date'].values[0]))
     
 @app.get("/UserForGenre")
-def UserForGenre( genero : str ): 
+async def UserForGenre( genero : str ): 
     games_df = steam_games[steam_games['genres'].apply(lambda x: genero in x)]
     games_df['date']=games_df['date'].dt.year
     indices= games_df.index.tolist()
