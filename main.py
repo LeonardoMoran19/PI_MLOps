@@ -47,20 +47,20 @@ def sentiment_analysis( year : int ):
     return 'Negativo = '+str(df.loc[0]['count'])+' Neutral = '+str(df.loc[1]['count'])+' Positivo = '+str(df.loc[2]['count'])
 
 @app.get('/PlayTimeGenre')
-def PlayTimeGenre( genero : str ):
-    steam_games = pd.read_parquet('steam_games.parquet')
+def PlayTimeGenre(genero: str):
+    steam_games = pd.read_parquet('steam_games.parquet', columns=['genres', 'date'])
+    user_items = pd.read_parquet('users_items.parquet', columns=['item_id', 'playtime'])
     steam_games = steam_games[steam_games['genres'].apply(lambda x: genero in x)]
-    user_items = pd.read_parquet('users_items.parquet')
-    user_items = user_items[['item_id','playtime']]
-    user_items = user_items.groupby('item_id')['playtime'].sum().reset_index().set_index('item_id')
+    user_items = user_items.groupby('item_id')['playtime'].sum()
     merged_df = steam_games.merge(user_items, how='left', left_index=True, right_index=True)
-    merged_df['playtime']=merged_df['playtime'].fillna(0)
-    merged_df['date']=merged_df['date'].dt.year
-    merged_df= merged_df.drop(columns={'genres','name'})
-    merged_df= merged_df.groupby('date')['playtime'].sum().reset_index()
+    merged_df['playtime'] = merged_df['playtime'].fillna(0)
+    merged_df['date'] = pd.to_datetime(merged_df['date']).dt.year
+    merged_df = merged_df.groupby('date')['playtime'].sum().reset_index()
     merged_df = merged_df.sort_values(by='playtime', ascending=False)
-    return 'Año de lanzamiento con mas horas jugadas para el genero '+genero+' es el: '+str(int(merged_df['date'].values[0]))
+    most_played_year = int(merged_df.iloc[0]['date'])
     
+    return f"Año de lanzamiento con más horas jugadas para el género {genero} es el: {most_played_year}"
+
 @app.get("/UserForGenre")
 def UserForGenre( genero : str ): 
     steam_games = pd.read_parquet('steam_games.parquet')
@@ -95,5 +95,4 @@ def recomendacion_juego( id :int):
     similar_games = similar_games['name'].values
     
     return 'Juegos recomendados: 1.'+similar_games[0]+', 2.'+similar_games[1]+', 3.'+similar_games[2]+', 4.'+similar_games[3]+', 5.'+similar_games[4]
-
 
