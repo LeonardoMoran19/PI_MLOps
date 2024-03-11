@@ -50,7 +50,7 @@ def sentiment_analysis( year : int ):
 def PlayTimeGenre(genero: str):
     steam_games = pd.read_parquet('steam_games.parquet', columns=['genres', 'date'])
     user_items = pd.read_parquet('users_items.parquet', columns=['item_id', 'playtime'])
-    steam_games = steam_games[steam_games['genres'].apply(lambda x: genero in x)]
+    steam_games = steam_games[steam_games['genres'].apply(lambda x: genero.capitalize() in x)]
     user_items = user_items.groupby('item_id')['playtime'].sum()
     merged_df = steam_games.merge(user_items, how='left', left_index=True, right_index=True)
     merged_df['playtime'] = merged_df['playtime'].fillna(0)
@@ -65,7 +65,7 @@ def PlayTimeGenre(genero: str):
 def UserForGenre(genero: str):
     steam_games = pd.read_parquet('steam_games.parquet', columns=['genres', 'date'])
     user_items = pd.read_parquet('users_items.parquet', columns=['user_id', 'item_id', 'playtime'])
-    steam_games = steam_games[steam_games['genres'].apply(lambda x: genero in x)]
+    steam_games = steam_games[steam_games['genres'].apply(lambda x: genero.capitalize() in x)]
     steam_games['date'] = pd.to_datetime(steam_games['date']).dt.year
     indices = steam_games.index
     user_items = user_items[user_items['item_id'].isin(indices)]
