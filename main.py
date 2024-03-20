@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 import pandas as pd
 pd.options.mode.chained_assignment = None
-import pickle
 
 app = FastAPI()
 
@@ -53,3 +52,4 @@ def recomendacion_juego( id :int):
         return recomendations.loc[id]['return']
     except KeyError:
         return 'Juego no se encuentra en los registros'
+
